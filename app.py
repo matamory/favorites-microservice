@@ -1,7 +1,10 @@
 from flask import Flask, jsonify, request
-from store import list_favorites
+from store import init_db, list_favorites
+from favorites import add_favorite, remove_favorite
 
 app = Flask(__name__)
+
+init_db()
 
 
 @app.route("/favorites", methods=["GET"])
@@ -9,19 +12,52 @@ def get_favorites():
     app_id = request.args.get("app_id")
     username = request.args.get("username")
 
+    if not app_id or not username:
+        return jsonify({
+            "success": False,
+            "error": "message"
+        }), 400
+
     favorites = list_favorites(app_id, username)
 
-    return jsonify({"favorites": favorites})
+    return jsonify({"favorites": favorites}), 200
 
 
 @app.route("/favorites", methods=["POST"])
-def add_favorite():
-    return jsonify({"message": "Add favorite"})
+def post_favorite():
+    data = request.get_json()
+
+    app_id = data.get("app_id")
+    username = data.get("username")
+    item_id = data.get("item_id")
+
+    result = add_favorite(app_id, username, item_id)
+
+    if result == "added":
+        return jsonify({"success": True}), 201
+
+    if result == "duplicate":
+        return jsonify({
+            "success": False,
+            "error": "duplicate"
+        }), 409
 
 
 @app.route("/favorites/<item_id>", methods=["DELETE"])
-def remove_favorite(item_id):
-    return jsonify({"message": "Remove favorite " + item_id})
+def delete_favorite(item_id):
+    app_id = request.args.get("app_id")
+    username = request.args.get("username")
+
+    result = remove_favorite(app_id, username, item_id)
+
+    if result == "removed":
+        return jsonify({"success": True}), 200
+
+    if result == "not_found":
+        return jsonify({
+            "success": False,
+            "error": "not_found"
+        }), 404
 
 
 if __name__ == "__main__":

@@ -10,7 +10,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS favorites (
             app_id TEXT NOT NULL,
             username TEXT NOT NULL,
-            item_id TEXT NOT NULL
+            item_id TEXT NOT NULL,
+            UNIQUE(app_id, username, item_id)
         )
     """)
 
