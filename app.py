@@ -1,11 +1,17 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+from store import list_favorites
 
 app = Flask(__name__)
 
 
 @app.route("/favorites", methods=["GET"])
 def get_favorites():
-    return jsonify({"message": "Get favorites"})
+    app_id = request.args.get("app_id")
+    username = request.args.get("username")
+
+    favorites = list_favorites(app_id, username)
+
+    return jsonify({"favorites": favorites})
 
 
 @app.route("/favorites", methods=["POST"])
