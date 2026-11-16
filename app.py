@@ -12,10 +12,18 @@ def get_favorites():
     app_id = request.args.get("app_id")
     username = request.args.get("username")
 
-    if not app_id or not username:
+    missing_fields = [
+        name
+        for name, value in [("app_id", app_id), ("username", username)]
+        if not value
+    ]
+
+
+    if missing_fields:
         return jsonify({
             "success": False,
-            "error": "message"
+            "error": "Invalid fields",
+            "fields": missing_fields
         }), 400
 
     favorites = list_favorites(app_id, username)
@@ -25,11 +33,27 @@ def get_favorites():
 
 @app.route("/favorites", methods=["POST"])
 def post_favorite():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify(success=False, error="Invalid or missing JSON"), 400
 
     app_id = data.get("app_id")
     username = data.get("username")
     item_id = data.get("item_id")
+
+    missing_fields = [
+        name
+        for name, value in [
+            ("app_id", app_id),
+            ("username", username),
+            ("item_id", item_id)
+        ]
+        if not value
+    ]
+
+    if missing_fields:
+        return jsonify(success=False, error="Invalid fields", fields=missing_fields), 400
 
     result = add_favorite(app_id, username, item_id)
 
@@ -47,6 +71,18 @@ def post_favorite():
 def delete_favorite(item_id):
     app_id = request.args.get("app_id")
     username = request.args.get("username")
+
+    missing_fields = [
+        name
+        for name, value in [
+            ("app_id", app_id),
+            ("username", username)
+        ]
+        if not value
+    ]
+
+    if missing_fields:
+        return jsonify(success=False, error="Invalid fields", fields=missing_fields), 400
 
     result = remove_favorite(app_id, username, item_id)
 
